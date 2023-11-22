@@ -25,19 +25,13 @@ except sqlite3.Error as e:
 class User:
     def __init__(self, username):
         self.username = username
-        
-        if self.check_username():
-            self.login()
-        else:
-            self.register()  
-             
-        self.tamagotchi = self.get_pet()
             
     # Checks whether a username is in the users table of the database and returns a bool
     def check_username(self) -> bool:
         cursor.execute('SELECT * FROM users WHERE username = ?', (self.username, ))
+        res = cursor.fetchone()
         
-        if cursor.fetchone() == None:
+        if not res:
             animated_print('It seems you are not registered yet. To register enter your password below')
             return False
         
@@ -375,7 +369,15 @@ def main():
         username = input('Username: ')
         if username:
             break
+        
     user = User(username)
+    
+    if user.check_username():
+        user.login()
+    else:
+        user.register()  
+        
+    user.tamagotchi = user.get_pet()
 
     while True:
         user.tamagotchi.display(times = 3, status = 'dynamic')
