@@ -5,11 +5,6 @@ from unittest.mock import patch
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
-username = 'test'
-password = 'test'
-name = 'test'
-
-
 def connect():
     try:
         conn = sqlite3.connect('database_test.db')
@@ -19,18 +14,21 @@ def connect():
         print(e)
         exit()
         
-def alter_database(username: str, password: str, name: str):
-    conn, cursor = connect()
-    cursor.execute('INSERT INTO users (username, password) VALUES (?, ?)', (username, password))
-    cursor.execute('INSERT INTO tamagotchi (user_id, name) VALUES ((SELECT id FROM users WHERE username = ?), ?)', (username, name))
-    conn.commit()
-    conn.close()
+def alter_database(conn, cursor, username = None, password = None, name = None):
+    if username and password:
+        cursor.execute('INSERT INTO users (username, password) VALUES (?, ?)', (username, generate_password_hash(password)))
+        
+    if username and name:
+        cursor.execute('INSERT INTO tamagotchi (user_id, name) VALUES ((SELECT id FROM users WHERE username = ?), ?)', (username, name))
 
 
-def revert_database(username: str, name: str):
-    conn, cursor = connect()
-    cursor.execute('DELETE FROM users WHERE username = ?', (username, ))
-    cursor.execute('DELETE FROM tamagotchi WHERE name = ?', (name, ))
+def revert_database(conn, cursor, username = None, name = None):
+    if username:
+        cursor.execute('DELETE FROM users WHERE username = ?', (username, ))
+    
+    if name:
+        cursor.execute('DELETE FROM tamagotchi WHERE name = ?', (name, ))
+        
     conn.commit()
     conn.close()
     
@@ -82,25 +80,41 @@ def test_animated_print():
         project.animated_print()
 
 
-def test_check_username_():
+def test_check_username_true():
+    username = 'test'
+    password = 'test'
+    name = 'test'
+    
     conn, cursor = connect()
     
-    alter_database(username, password, name)
+    alter_database(conn = conn, cursor = cursor, username = username, password = password)
+    
+    user = project.User(username)    
+    assert user.check_username() == True
+
+    revert_database(conn = conn, cursor = cursor, username = username)
+
+
+def test_check_username_false():
+    conn, cursor = connect()
+    
+    user = project.User('test2')
+    assert user.check_username() == False
+    
+    conn.close()
+
+
+def test_login():
+    conn, cursor = connect()
+    
+    username = 'test3'
+    password = 'test3'
+    
+    alter_database(conn = conn, cursor = cursor, username = username, password = password)
     
     user = project.User(username)
-    cursor.execute('SELECT * FROM users WHERE username = ?', (user.username, ))
-    res = cursor.fetchone()
-    print(res)    
-    assert user.check_username() == True
-    
-    revert_database(username, name)
-    
-    user_2 = project.User(username)
-    cursor.execute('SELECT * FROM users WHERE username = ?', (user_2.username, ))
-    res_2 = cursor.fetchone()
-    print(res_2)
-    print(user_2.check_username())
-    assert user_2.check_username() == False
-
-    
-    
+        
+    with patch('builtins.input', side_effect = [password]):
+        user.login()
+          
+    revert_database(conn = conn, cursor = cursor, username = username)
