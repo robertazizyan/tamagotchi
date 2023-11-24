@@ -220,7 +220,7 @@ class Tamagotchi:
         return age.days
     
     # Determine whether the Tamagotchi wants to do what you propose, based on its statuses and its age. Return a bool with the result.
-    def proceed_with_action(self, action: str) -> bool:
+    def proceed_with_action(self, action = None) -> bool:
         success_probability = 100 
         
         if action == 'feed':
@@ -250,7 +250,7 @@ class Tamagotchi:
             
     
     # Fetch a tamagotchi from the database  either randomly or by user's choice, create its object, update happiness for both Tamagotchi and save the data for both objects    
-    def visit(self) -> None:
+    def visit(self, cursor) -> None:
         
         self.display(status = 'static')
         animated_print('You can input "1" to visit a specific tamagotchi or "2" to visit a random one')
@@ -258,10 +258,10 @@ class Tamagotchi:
         while True:    
             inpt = input('Your choice: ')
             if inpt == '1':
-                friend_username, pet_name = self.get_specific_pet()
+                friend_username, pet_name = self.get_specific_pet(cursor)
                 break
             elif inpt == '2':
-                friend_username, pet_name = self.get_random_pet()
+                friend_username, pet_name = self.get_random_pet(cursor)
                 break
             else:
                 animated_print('Invalid choice. Try again!')
@@ -269,7 +269,7 @@ class Tamagotchi:
         friend = Tamagotchi(friend_username, pet_name)
 
         self.happiness = min_max(self.happiness + 10)
-        friend.happiness = min_max(self.happiness + 10)
+        friend.happiness = min_max(friend.happiness + 10)
         
         
         self.display(times = 5, status = 'dynamic', visit = True, friend = friend.name)
@@ -282,7 +282,7 @@ class Tamagotchi:
         time.sleep(3)
     
     # Fetch a specific Tamagotchi from the database, return the username and name of the Tamagotchi
-    def get_specific_pet(self) -> tuple:
+    def get_specific_pet(self, cursor) -> tuple:
         while True:
             friend_username = input("Enter your friend's username: ")    
             cursor.execute('SELECT id, username FROM users WHERE username = ?', (friend_username, ))
@@ -308,7 +308,7 @@ class Tamagotchi:
         return friend_user[1], friend_pet[0]
 
     # Fetch a random Tamagotchi from the database, return a username and name for 
-    def get_random_pet(self) -> tuple:
+    def get_random_pet(self, cursor) -> tuple:
         cursor.execute('SELECT id, username FROM users WHERE username != ?', (self.username, ))
         users = cursor.fetchall()
         id_pos = random.randint(0, len(users) - 1)
@@ -377,7 +377,7 @@ def main():
     else:
         user.register(cursor)  
         
-    user.tamagotchi = user.get_pet()
+    user.tamagotchi = user.get_pet(cursor)
 
     while True:
         user.tamagotchi.display(times = 3, status = 'dynamic')
