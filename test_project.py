@@ -20,6 +20,8 @@ def alter_database(conn, cursor, username = None, password = None, name = None):
         
     if username and name:
         cursor.execute('INSERT INTO tamagotchi (user_id, name) VALUES ((SELECT id FROM users WHERE username = ?), ?)', (username, name))
+    
+    conn.commit()
 
 
 def revert_database(conn, cursor, username = None, name = None):
@@ -90,31 +92,93 @@ def test_check_username_true():
     alter_database(conn = conn, cursor = cursor, username = username, password = password)
     
     user = project.User(username)    
-    assert user.check_username() == True
-
-    revert_database(conn = conn, cursor = cursor, username = username)
+    
+    try:
+        assert user.check_username() == True
+    finally:
+        revert_database(conn = conn, cursor = cursor, username = username)
 
 
 def test_check_username_false():
     conn, cursor = connect()
     
     user = project.User('test2')
-    assert user.check_username() == False
     
-    conn.close()
+    try:
+        assert user.check_username() == False
+    finally:
+        conn.close()
+    
 
-
-def test_login():
+def test_register():
     conn, cursor = connect()
     
     username = 'test3'
     password = 'test3'
+    
+    user = project.User(username)
+        
+    with patch('builtins.input', side_effect = [password]):
+        user.register(cursor)  
+
+    cursor.execute('SELECT password FROM users WHERE username = ?', (username, ))
+    res = cursor.fetchone()[0]
+    
+    revert_database(conn = conn, cursor = cursor, username = username)
+    
+    assert check_password_hash(res, password) == True
+ 
+
+def test_login():
+    conn, cursor = connect()
+    
+    username = 'test4'
+    password = 'test4'
     
     alter_database(conn = conn, cursor = cursor, username = username, password = password)
     
     user = project.User(username)
         
     with patch('builtins.input', side_effect = [password]):
-        user.login()
-          
+        user.login(cursor)  
+
+    cursor.execute('SELECT password FROM users WHERE username = ?', (username, ))
+    res = cursor.fetchone()[0]
+    
     revert_database(conn = conn, cursor = cursor, username = username)
+    
+    assert check_password_hash(res, password) == True
+
+
+def test_get_pet_and_create_pet_no_pet():
+    conn, cursor = connect()
+    
+    username = 'test5'
+    password = 'test5'
+    name ='test5'
+    
+    alter_database(conn = conn, cursor = cursor, username = username, password = password)
+    
+    user = project.User(username)
+    
+    with patch('builtins.input', side_effect = [name]):
+        pet = user.get_pet(cursor)
+    
+    cursor.execute('SELECT name FROM tamagotchi WHERE user_id = (SELECT id FROM users WHERE username = ?)', (username, ))
+    res = cursor.fetchone()[0]
+    
+    revert_database(conn = conn, cursor = cursor, username = username, name = name)
+    
+    assert res == name
+    assert pet.name == name
+    assert pet.name == res
+        
+def test_get_pet_and_create_pet_one_pet():
+    conn, cursor = connect()
+
+    username = 'test6'
+    password = 'test6'
+    name = 'test6'
+    
+        
+    
