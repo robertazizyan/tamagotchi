@@ -2,6 +2,7 @@ import project
 import pytest
 import sqlite3
 import csv
+import re
 from unittest.mock import patch
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -10,7 +11,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 The 3 functions below serve as a template for connection to the test database to be used in testing the User and Tamagotchi class
 '''
 
-
+# Return conn and cursor objects for sqlite3 operations
 def connect():
     try:
         conn = sqlite3.connect('database_test.db')
@@ -20,7 +21,7 @@ def connect():
         print(e)
         exit()
 
-
+# Insert necessary data into the users and/or tamagotchi tables from the database_test.db and commit those changes
 def alter_database(conn, cursor, username = None, password = None, names = None):
     if username and password:
         cursor.execute('INSERT INTO users (username, password) VALUES (?, ?)', (username, generate_password_hash(password)))
@@ -31,7 +32,7 @@ def alter_database(conn, cursor, username = None, password = None, names = None)
     
     conn.commit()
 
-
+# Revert database_test.db to its original state with NO DATA whatsoever, commit the changes and close the connection
 def revert_database(conn, cursor):
     cursor.execute('DELETE FROM users')
     cursor.execute('DELETE FROM tamagotchi')
@@ -39,7 +40,23 @@ def revert_database(conn, cursor):
     conn.commit()
     conn.close()
     
+'''
+The function below is to be used ONLY AT THE END OF THE LAST TEST
+since it deletes all the save data for the usernames that have 'test (and maybe digits after)' in them
+'''
+def revert_savefile():
+    with open('saves.csv', mode = 'r') as file:
+        reader = csv.DictReader(file)
+        rows = [row for row in reader if not re.search(r'^test\d{0,2}', row['username'])]
     
+    with open('saves.csv', mode = 'w') as file:
+        writer = csv.DictWriter(file, fieldnames = reader.fieldnames)
+        writer.writeheader()
+        writer.writerows(rows)
+
+'''
+5 Functions below test the menus of the game without passing in the user object
+'''    
 def test_show_main_menu():
     with pytest.raises(TypeError):
         project.show_main_menu()
@@ -65,6 +82,7 @@ def test_game_exit():
         project.game_exit()
 
 
+# Assert the work of the status capping function 
 def test_min_max():
     assert project.min_max(0) == 0
     assert project.min_max(100) == 100
@@ -73,10 +91,12 @@ def test_min_max():
     assert project.min_max(50) == 50
 
 
+# Well i mean this is a test right?
 def test_clear_terminal():
     assert project.clear_terminal() == None
 
 
+# And this too...
 def test_animated_print():
     assert project.animated_print('hello') == None
     
@@ -87,6 +107,11 @@ def test_animated_print():
         project.animated_print()
 
 
+'''
+Moving on to User class tests. Run very slow (I'm guessing due to db shenanigans), but they pass:)
+'''
+
+# Test that the method queries the db correctly with a user already in it
 def test_check_username_true():
     username = 'test'
     password = 'test'
@@ -103,6 +128,7 @@ def test_check_username_true():
         revert_database(conn = conn, cursor = cursor)
 
 
+# Test that the method returns False, when querying for a user not in the database
 def test_check_username_false():
     conn, cursor = connect()
     
@@ -114,6 +140,7 @@ def test_check_username_false():
         conn.close()
     
 
+# Test the the method correctly handles the password storing when registering
 def test_register():
     conn, cursor = connect()
     
@@ -133,6 +160,7 @@ def test_register():
     assert check_password_hash(res, password) == True
  
 
+# Same, but during login
 def test_login():
     conn, cursor = connect()
     
@@ -154,6 +182,15 @@ def test_login():
     assert check_password_hash(res, password) == True
 
 
+'''
+Several methods below check how the method get_pet() returns a Tamagotchi object, correctly storing data about it in db
+but with different conditions indicated by the test's name. The condition include:
+1. No pet in db. New pet created
+2. One pet in db. Pet returned
+3. One pet in db. New pet created
+4. Many pets in db. Chosen pet returned
+5. Many pets in db. New pet created
+'''
 def test_get_pet_no_pet():
     conn, cursor = connect()
     
@@ -279,7 +316,8 @@ def test_get_pet_many_pets_create_new():
     assert pet.name == new_name
     assert pet.name == db_names[3]
 
-    
+
+# Test that due to a save for the current tamagotchi being absent, standard statuses are assigned to the object    
 def test_tamagotchi():
     username = 'test5'
     name = 'test5'
@@ -291,7 +329,8 @@ def test_tamagotchi():
     assert test_tamagotchi.name == name
     assert test_tamagotchi.username == username
 
-    
+
+# Test that the save files, created for the previous test (due to code structure of the project) exist in the file and store the correct info    
 def test_savefile():
     usernames = ['test5', 'test6', 'test7', 'test8', 'test9']
     names = ['test5', 'test6', 'new_test7', 'test8_1', 'test9_4']
@@ -310,7 +349,8 @@ def test_savefile():
     for item in saves_found:
         assert item == True
 
-    
+
+# Check that update_statuses method returns true or false given all the necessary arguments, and False if arguments are missing    
 def test_update_statuses():
     username = 'test10'
     name = 'test10'
@@ -332,6 +372,8 @@ def test_update_statuses():
     assert test_tamagotchi.update_statuses() == False
     assert test_tamagotchi.update_statuses(food_effect, happiness_effect) == False
 
+
+# Check that the method returns True or False with arguments, and False without them
 def test_proceed_with_action():
     username = 'test11'
     name = 'test11'
@@ -350,7 +392,7 @@ def test_proceed_with_action():
     assert res_2 in [True, False]
     assert test_tamagotchi.proceed_with_action() == False
     
-
+# Test that both Tamagotchi object gain +10 happiness when this method executes
 def test_visit_random():
     username = 'test12'
     password = 'test12'
@@ -382,7 +424,7 @@ def test_visit_random():
             if row['username'] == username_2 and row['name'] == name_2:
                 assert row['happiness'] == '60'
                 
-
+# Same thing, but with a specific user and tamagotchi this time
 def test_visit_specific():
     username = 'test14'
     password = 'test14'
@@ -412,4 +454,7 @@ def test_visit_specific():
             if row['username'] == username and row['name'] == name:
                 assert row['happiness'] == '60'
             if row['username'] == username_2 and row['name'] == name_2:
-                assert row['happiness'] == '60'   
+                assert row['happiness'] == '60'
+    
+    # End of tests, so delete all the test entries in the save files
+    revert_savefile()
