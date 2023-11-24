@@ -38,7 +38,7 @@ class User:
         return True
     
     # Insert a new user into the users table from the database
-    def register(self) -> None:
+    def register(self, cursor) -> None:
         while True:
             password = input('Password: ')
             if password:
@@ -50,7 +50,7 @@ class User:
         time.sleep(2)
         
     # Check the password in the users table from the database, if incorrect password is provided force the user to try again
-    def login(self) -> None:
+    def login(self, cursor) -> None:
         animated_print('To login, enter your password below')
         
         while True:
@@ -66,7 +66,7 @@ class User:
                 animated_print('Incorrect password. Try again!')  
     
     # returns a Tamagotchi object based on the user already having a Tamagotchi, or not having it(thus creating it through create_pet)
-    def get_pet(self):
+    def get_pet(self, cursor):
         clear_terminal()
         
         cursor.execute('SELECT name FROM tamagotchi WHERE user_id = (SELECT id FROM users where username = ?)', (self.username, ))
@@ -75,7 +75,7 @@ class User:
         
         if not pet_names:
             animated_print("It seems you currently don't have any Tamagotchi. Let's create one!")
-            pet = self.create_pet(pet_names)
+            pet = self.create_pet(pet_names, cursor)
         elif len(pet_names) > 1:
             animated_print("It seems you currently have several active Tamagotchi. Let's choose the one you want to play with!") 
             
@@ -90,7 +90,7 @@ class User:
                 name = input('Name or +: ')
                 
                 if name == '+':
-                    pet = self.create_pet(pet_names)
+                    pet = self.create_pet(pet_names, cursor)
                     break
                 
                 if name not in pet_names:
@@ -107,7 +107,7 @@ class User:
                 confirm_name = input('Name or +: ')
                 
                 if confirm_name == '+':
-                    pet = self.create_pet(pets[0])
+                    pet = self.create_pet(pets[0], cursor)
                     break
                 elif confirm_name == name:
                     pet = Tamagotchi(self.username, name)
@@ -119,7 +119,7 @@ class User:
         return pet
             
     # Create and add the newly created Tamagotchi object into the database and return it to get_pet method
-    def create_pet(self, pet_names: list):
+    def create_pet(self, pet_names: list, cursor):
             animated_print("Enter your Tamagotchi's name below. Remember that you won't be able to change it.")
             
             while True:
@@ -373,9 +373,9 @@ def main():
     user = User(username)
     
     if user.check_username():
-        user.login()
+        user.login(cursor)
     else:
-        user.register()  
+        user.register(cursor)  
         
     user.tamagotchi = user.get_pet()
 
