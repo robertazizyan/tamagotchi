@@ -279,7 +279,7 @@ class Tamagotchi:
         self.save_data()
         friend.save_data()
         
-        time.sleep(3)
+        time.sleep(5)
     
     # Fetch a specific Tamagotchi from the database, return the username and name of the Tamagotchi
     def get_specific_pet(self, cursor) -> tuple:
@@ -459,7 +459,7 @@ def show_food_menu(user: User) -> None:
                 animated_print(f'Food: {food[choice][2]}')
                 animated_print(f'Happiness: {food[choice][3]}')
                 
-                time.sleep(2)
+                time.sleep(4)
                 break
             else:
                 user.tamagotchi.display(status = 'static')
@@ -467,7 +467,7 @@ def show_food_menu(user: User) -> None:
                 animated_print(f"Looks like {user.tamagotchi.name} doesn't want eat right now:(")
                 animated_print("Try again later or try raising its happiness!")
                 
-                time.sleep(2)
+                time.sleep(4)
                 break                
         else:
             animated_print('Invalid choice. Try again!')
@@ -506,7 +506,7 @@ def show_interaction_menu(user: User) -> None:
                 animated_print(f'Food: {interaction[choice][2]}')
                 animated_print(f'Happiness: {interaction[choice][3]}')
                 
-                time.sleep(2)
+                time.sleep(4)
                 break
             else:
                 user.tamagotchi.display(status = 'static')
@@ -514,7 +514,7 @@ def show_interaction_menu(user: User) -> None:
                 animated_print(f"Looks like {user.tamagotchi.name} doesn't want to do that right now:(")
                 animated_print("Try again later or try feeding it!")
                 
-                time.sleep(2)
+                time.sleep(4)
                 break
         else:
             animated_print('Invalid choice. Try again!')   
