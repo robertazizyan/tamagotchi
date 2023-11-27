@@ -9,6 +9,16 @@ The program makes uses of the following pypi modules:
 
 To install any of those, run 'pip install' + name of the modules above in the terminal window. Note that without any of those modules you'll encounter errors during the program execution.
 
+## Contents
+
+1. project.py - main file for the game
+2. database.db - a SQLite3 database with the user and Tamagotchi info
+3. saves.csv - a CSV file containing saves for all the Tamagotchi
+4. images.py - a file with the Tamagotchi images created with docstrings and ASCII art
+5. test_project.py - a testing program
+6. database_test.db - a SQLite3 database used for testing purposes
+
+
 ## Description
 The program is a terminal-based implementation of the Tamagotchi game with user inputs used as commands to interact with the Tamagotchi.
 
