@@ -174,8 +174,8 @@ class Tamagotchi:
             sleep_time = 0
         hours_to_simulate = hours - sleep_time
         
-        current_food = min_max(int(last_food - hours_to_simulate / 2))
-        current_happiness = min_max(int(last_happiness - hours_to_simulate / 2))
+        current_food = min_max(int(last_food - hours_to_simulate / 3))
+        current_happiness = min_max(int(last_happiness - hours_to_simulate / 3))
         
         return current_food, current_happiness
      
@@ -224,9 +224,9 @@ class Tamagotchi:
         success_probability = 100 
         
         if action == 'feed':
-            success_probability += int(self.happiness / 5) - self.food - int(self.get_age() / 5)
+            success_probability += int(self.happiness / 5) - int(self.food / 1.5) - int(self.get_age() / 5)
         elif action ==  'interact':
-            success_probability += int(self.food / 5) - self.happiness - int(self.get_age() / 5)
+            success_probability += int(self.food / 5) - int(self.happiness / 1.5) - int(self.get_age() / 5)
         else:
             return False
         
@@ -274,7 +274,7 @@ class Tamagotchi:
         
         self.display(times = 5, status = 'dynamic', visit = True, friend = friend.name)
         animated_print(f"{self.username}'s {self.name} visits {friend.username}'s {friend.name}!")
-        animated_print(f"{self.name}'s and {friend.name}'s happiness increased by 10!")
+        animated_print(f"{self.name}'s and {friend.name}'s happiness: +10!")
         
         self.save_data()
         friend.save_data()
@@ -361,7 +361,6 @@ class Tamagotchi:
 
               
 def main():
-    
     clear_terminal()
     animated_print('Welcome to my own implementation of the Tamagochi game!\nYou can find the instructions to the game at README.MD\nTo start/continue playing with your Tamagotchi, enter your username below')
     
@@ -419,10 +418,10 @@ def show_main_menu(user: User) -> None:
                 time.sleep(2)  
                 break
             else:  
-                user.tamagotchi.visit()
+                user.tamagotchi.visit(cursor)
                 break
         elif choice == '4':
-            user.tamagotchi = user.get_pet()
+            user.tamagotchi = user.get_pet(cursor)
             break
         else:
             animated_print('Invalid choice. Try again')
