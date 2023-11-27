@@ -362,7 +362,8 @@ class Tamagotchi:
               
 def main():
     clear_terminal()
-    animated_print('Welcome to my own implementation of the Tamagochi game!\nYou can find the instructions to the game at README.MD\nTo start/continue playing with your Tamagotchi, enter your username below')
+    print(figlet.renderText('Tamagotchi Python'))
+    animated_print('Welcome to my own implementation of the Tamagochi game!\n\nYou can find the instructions to the game at README.MD\n\nEnlarge the terminal for a better experience!\n\nTo start/continue playing with your Tamagotchi, enter your username below')
     
     while True:
         username = input('Username: ')
