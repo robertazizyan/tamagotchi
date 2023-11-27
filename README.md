@@ -3,9 +3,9 @@
 
 ## Requirements
 The program makes uses of the following pypi modules:
-**werkzeug**
-**pyfiglet**
-**tabulate**
+1. **werkzeug**
+2. **pyfiglet**
+3. **tabulate**
 
 To install any of those, run 'pip install' + name of the modules above in the terminal window. Note that without any of those modules you'll encounter errors during the program execution.
 
