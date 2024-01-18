@@ -1,5 +1,4 @@
 # A Python Tamagotchi Game
-## Video Demo https://youtu.be/RNT9vw6UEJY
 
 ## Requirements
 The program makes uses of the following pypi modules:
